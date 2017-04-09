@@ -8,7 +8,7 @@ document.querySelector('#reset-button').addEventListener('click', () => {
     update(originalData);
 });
 
-const createCard = (image, title, texts) => {
+const createCard = (image, title, texts, _id) => {
     let text = '';
     for (let t of texts){
         text += `<p class="card-text">${t}</p>`;
@@ -20,7 +20,11 @@ const createCard = (image, title, texts) => {
                 ${text}                
             </div>
             <div class="card-footer">
-                <p><button class="btn btn-primary">View</button></p>
+                <p>
+                    <button id="view_${_id}" class="btn btn-primary">View</button>
+                    <button class="btn btn-primary" id="edit_${_id}">Edit</button>
+                    <button class="btn btn-danger" id="delete_${_id}">Delete</button>
+                </p>
             </div>`;
 };
 
@@ -40,26 +44,25 @@ const categoryButtons = (items) => {
 };
 
 const sortItems = (items, rule) => {
-    const newItems = items.filter(item => item.category === rule);
+    const newItems = items.filter((item) => item.category === rule);
     // console.log(newItems);
     update(newItems);
 };
 
 const getData = () => {
     fetch('/posts')
-        .then(response => {
+        .then((response) => {
             return response.json();
         })
-        .then(items => {
+        .then((items) => {
             originalData = items;
             update(items);
         });
-
 };
 
 const removeDuplicates = (myArr, prop) => {
     return myArr.filter((obj, pos, arr) => {
-        return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos;
+        return arr.map((mapObj) => mapObj[prop]).indexOf(obj[prop]) === pos;
     });
 };
 
@@ -71,8 +74,9 @@ const update = (items) => {
         const article = document.createElement('article');
         article.setAttribute('class', 'card');
         const time = moment(item.time);
-        article.innerHTML = createCard(item.thumbnail, item.title, ['<small>'+time.format('dddd, MMMM Do YYYY, HH:mm')+'</small>', item.details]);
-        article.addEventListener('click', () => {
+        article.innerHTML = createCard(item.thumbnail, item.title, ['<small>'+time.format('dddd, MMMM Do YYYY, HH:mm')+'</small>', item.details], item._id);
+        console.log(article);
+        article.querySelector('#view_'+item._id).addEventListener('click', () => {
             document.querySelector('.modal-body img').src = item.image;
             document.querySelector('.modal-title').innerHTML = item.title;
             resetMap(item);
@@ -84,6 +88,18 @@ const update = (items) => {
                 resetMap(item);
             });
             myModal.modal('show');
+        });
+        article.querySelector('#edit_'+item._id).addEventListener('click', () => {
+            console.log(item.title);
+            document.querySelector('#editId').value = item._id;
+            document.querySelector('#editTitle').value = item.title;
+            document.querySelector('#editCategory').value = item.category;
+            document.querySelector('#editDetails').innerHTML = item.details;
+            const editModal = $('#editModal');
+            editModal.modal('show');
+        });
+        article.querySelector('#delete_'+item._id).addEventListener('click', () => {
+            deletePost(item._id);
         });
         document.querySelector('.card-deck').appendChild(article);
     }
@@ -101,11 +117,11 @@ const initMap = () => {
 
 const resetMap = (item) => {
     const coords = item.coordinates;
-    console.log(coords);
+    // console.log(coords);
     google.maps.event.trigger(map, "resize");
     map.panTo(coords);
     marker.setOptions({
-        position: coords
+        position: coords,
     });
 };
 
@@ -123,9 +139,9 @@ document.querySelector('#spyForm').addEventListener('submit', (evt) => {
 
     fetch(url, {
         method: 'post',
-        body: data
+        body: data,
     }).then((resp)=> {
-        // console.log(resp);
+        console.log(resp);
         getData();
         $('#myTabs a:first').tab('show');
     });
@@ -133,7 +149,45 @@ document.querySelector('#spyForm').addEventListener('submit', (evt) => {
 
 
 // init tabs
-$('#myTabs a').click(function (e) {
+$('#myTabs a').click(function(e) {
     e.preventDefault();
     $(this).tab('show');
+});
+
+// REQUESTS
+
+const deletePost = (id) => {
+    if (confirm('This will permanently delete event')) {
+        const url = '/deletepost/'+id;
+        fetch(url, {
+            method: 'DELETE',
+        }).then((resp)=> {
+            console.log(resp);
+            getData();
+            $('#myTabs a:first').tab('show');
+        });
+    } else {
+        // Do nothing!
+    }
+};
+
+document.querySelector('#spyEditForm').addEventListener('submit', (evt) => {
+    evt.preventDefault();
+    const data = new FormData(evt.target);
+    const fileElement = evt.target.querySelector('input[type=file]');
+    const file = fileElement.files[0];
+    data.append('file', file);
+
+    const id = evt.target.querySelector('input[id=editId]').value;
+    const url = '/editpost/'+id;
+    console.log(url);
+    console.log(file);
+    fetch(url, {
+        method: 'PATCH',
+        body: data,
+    }).then((resp)=> {
+        console.log(resp);
+        getData();
+        $('#myTabs a:first').tab('show');
+    });
 });

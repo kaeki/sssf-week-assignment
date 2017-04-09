@@ -4,7 +4,7 @@ class Thumbnail {
     constructor(){
         this.sharp = require('sharp');
     }
-    getThumbnail(original, thumbnail, x, y){
+    getThumbnail(original, thumbnail, x, y) {
         this.sharp(original)
             .resize(x, y)
             .toFile(thumbnail, (err) => {

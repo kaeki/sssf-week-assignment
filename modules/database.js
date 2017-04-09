@@ -11,7 +11,7 @@ class Database {
         this.app = app;
         this.mongoose.connect(this.url).then(() => {
             console.log('Connected to Mongo');
-        this.app.listen(3000);
+        this.app.listen(5000);
     }, (err) => {
             console.log(err.message);
             console.error('Connecting to Mongo failed');
