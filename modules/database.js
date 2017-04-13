@@ -6,12 +6,14 @@ class Database {
         this.mongoose.Promise = global.Promise; //ES6 Promise
     };
 
-    connect(url, app) {
+    connect(url, app, port) {
         this.url = url;
         this.app = app;
         this.mongoose.connect(this.url).then(() => {
             console.log('Connected to Mongo');
-        this.app.listen(5000);
+        this.app.listen(port, () => {
+            console.log('Server listening port '+port);
+        });
     }, (err) => {
             console.log(err.message);
             console.error('Connecting to Mongo failed');
