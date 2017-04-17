@@ -6,3 +6,6 @@ config
 files/img
 files/original
 files/thumb
+ssl-cert.pem
+ssl-key.pem
+

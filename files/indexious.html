@@ -13,7 +13,9 @@
           integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+    <script src="https://simplewebrtc.com/latest-v2.js"></script>
 </head>
 <body>
 <!--[if lt IE 8]>
@@ -32,8 +34,14 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#add">Add</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#videoChat">Video Chat</a>
+                </li>
             </ul>
-        </div>
+            <a href="/logout"><button class="btn btn-danger" id="logoutBtn">
+                Logout
+            </button></a>
+        </div>  
     </div>
     <div class="tab-content">
         <div class="tab-pane active" id="home" role="tabpanel">
@@ -89,6 +97,24 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </form>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="videoChat" role="tabpanel">
+            <div class="row">
+                <div id="form" class="col">
+                    <div class="form-inline my-2 my-lg-0">
+                        <input id="nickname" type="text" hidden>
+                        <input id="room" class="form-control mr-sm-2" type="text" placeholder="Plumbus">
+                        <button class="btn btn-outline-success my-2 my-sm-0" id="connectBtn">Connect</button>
+                    </div>
+                    <div class="local col">
+                        <h3 id="userName"></h3>
+                        <video id="localVideo"></video>
+    
+                    </div>
+                    <div class="col" id="remotes">
+                    </div>
                 </div>
             </div>
         </div>
@@ -173,7 +199,7 @@
 <script src="modules/moment/moment.js"></script>
 
 <script src="js/main.js"></script>
-
+<script src="js/rtc.js"></script>
 
 </body>
 </html>

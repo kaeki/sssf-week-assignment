@@ -4,15 +4,19 @@ const multer = require('multer');
 const ExifImage = require('exif').ExifImage;
 const DB = require('./modules/database');
 const thumbnail = require('./modules/thumbnail');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const config = require('./config');
 
 const app = express();
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 
-
-
-// enable https redirection (requires that cloud has valid certificates to work)
+//TODO: enabfle https redirection (requires that cloud has valid certificates to work)
+/*
 app.enable('trust proxy');
 
 app.use((req, res, next) => {
@@ -22,10 +26,13 @@ app.use((req, res, next) => {
         res.redirect('https://' + req.headers.host + req.url);
     }
 });
-// set up database
+*/
+
+// ########## DB SETUP ###########
 DB.connect(`mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_HOST}:${config.DB_PORT}/${config.DB}`, app, config.APP_PORT);
 
 const spySchema = {
+    user: String,
     time: Date,
     category: String,
     title: String,
@@ -51,6 +58,8 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + path.extname(file.originalname));
     },
 });
+// ######### / DB SETUP ############
+
 const upload = multer({storage: storage});
 
 
@@ -58,9 +67,66 @@ const upload = multer({storage: storage});
 app.use(express.static('files'));
 app.use('/modules', express.static('node_modules'));
 
+// ############## AUTH #################
+
+
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+
+const authenticateUser = (username, password) => {
+    const auth = config.USERS.filter((user) => { 
+        return user.name === username && user.pwd === password; 
+    });
+    console.log(auth.length != 0)
+    return auth.length != 0;
+}
+passport.use(new LocalStrategy(
+    (username, password, done) => {
+        if (authenticateUser(username, password)) {
+            console.log(username+' logged in');
+            return done(null, {});
+        }
+        console.log('Incorrect credentials.');
+        done(null, false, {message: 'Incorrect credentials.'});
+        return;
+
+    }
+));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.post('/login',
+  passport.authenticate('local', {
+    failureRedirect: '/login',
+    session: false}), 
+    (req, res) => {
+        res.cookie('user', req.body.username).redirect('/');
+    }
+);
+
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname+'/files/login.html');
+});
+
+app.get('/logout', (req, res) => {
+    res.clearCookie('user');
+    res.redirect('/login');
+})
+// ############## /AUTH #################
+
+// ############## INDEX #################
+app.get('/', (req, res) => {
+    if(typeof req.cookies.user == 'undefined') {
+        res.redirect('/login');
+    } else {
+        res.sendFile(__dirname+'/files/indexious.html');
+    }
+})
+// ############## CRUD ##################
 // get posts
 app.get('/posts', (req, res) => {
-    Spy.find().exec().then((posts) => {
+    console.log('/POSTS user: '+req.cookies.user)
+    Spy.find({user: req.cookies.user}).exec().then((posts) => {
         res.send(posts);
     });
 });
@@ -107,8 +173,9 @@ app.use('/new', (req, res, next) => {
 
 // add to DB
 app.use('/new', (req, res, next) => {
-    // console.log(req.body);
+    req.body.user = req.cookies.user;
     Spy.create(req.body).then((post) => {
+        console.log(post.user);
         res.send({status: 'OK', post: post});
     }).then(() => {
         res.send({status: 'error', message: 'Database error'});
@@ -207,8 +274,13 @@ app.use('/editpost/:id', (req, res, next) => {
 // END Edit existing *********
 
 // Delete post ***************
-
+const fs = require('fs');
 app.delete('/deletepost/:id', (req, res) => {
+    /*
+    Spy.findById(req.params.id).exec((err, post) => {
+        //DELETE FILES HERE BUT RETURNS NULL
+    });
+    */
     Spy.findById(req.params.id).remove().exec( (err, response) => {
         if(err) {
             res.send({status: 'error', message: 'Delete failed'});
@@ -218,3 +290,5 @@ app.delete('/deletepost/:id', (req, res) => {
     });
 });
 // END Delete post ***********
+
+// ############ /CRUD ############
