@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 //TODO: enabfle https redirection (requires that cloud has valid certificates to work)
-/*
+
 app.enable('trust proxy');
 
 app.use((req, res, next) => {
@@ -26,7 +26,7 @@ app.use((req, res, next) => {
         res.redirect('https://' + req.headers.host + req.url);
     }
 });
-*/
+
 
 // ########## DB SETUP ###########
 DB.connect(`mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_HOST}:${config.DB_PORT}/${config.DB}`, app, config.APP_PORT);
