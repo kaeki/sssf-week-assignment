@@ -50,7 +50,10 @@ const sortItems = (items, rule) => {
 };
 
 const getData = () => {
-    fetch('/posts')
+    fetch('/posts', {
+        method: 'GET',
+        credentials: 'include'
+    })
         .then((response) => {
             return response.json();
         })
@@ -135,10 +138,9 @@ document.querySelector('#spyForm').addEventListener('submit', (evt) => {
     const file = fileElement.files[0];
     data.append('file', file);
 
-    const url = '/new';
-
-    fetch(url, {
+    fetch('/new', {
         method: 'post',
+        credentials: 'include',
         body: data,
     }).then((resp)=> {
         console.log(resp);

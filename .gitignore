@@ -8,4 +8,4 @@ files/original
 files/thumb
 ssl-cert.pem
 ssl-key.pem
-
+certrequest.csr

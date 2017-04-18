@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 //TODO: enabfle https redirection (requires that cloud has valid certificates to work)
-
+/*
 app.enable('trust proxy');
 
 app.use((req, res, next) => {
@@ -26,7 +26,7 @@ app.use((req, res, next) => {
         res.redirect('https://' + req.headers.host + req.url);
     }
 });
-
+*/
 
 // ########## DB SETUP ###########
 DB.connect(`mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_HOST}:${config.DB_PORT}/${config.DB}`, app, config.APP_PORT);
@@ -174,6 +174,7 @@ app.use('/new', (req, res, next) => {
 // add to DB
 app.use('/new', (req, res, next) => {
     req.body.user = req.cookies.user;
+    console.log(req.body)
     Spy.create(req.body).then((post) => {
         console.log(post.user);
         res.send({status: 'OK', post: post});
@@ -276,11 +277,16 @@ app.use('/editpost/:id', (req, res, next) => {
 // Delete post ***************
 const fs = require('fs');
 app.delete('/deletepost/:id', (req, res) => {
-    /*
+    
     Spy.findById(req.params.id).exec((err, post) => {
-        //DELETE FILES HERE BUT RETURNS NULL
+        console.log(req.params.id, post);
+        /*
+        fs.unlink(__dirname+post.image);
+        fs.unlink(__dirname+post.thumbnail);
+        fs.unlink(__dirname+post.original);
+        */
     });
-    */
+
     Spy.findById(req.params.id).remove().exec( (err, response) => {
         if(err) {
             res.send({status: 'error', message: 'Delete failed'});
